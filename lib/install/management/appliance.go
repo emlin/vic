@@ -289,12 +289,6 @@ func (d *Dispatcher) addParaVirtualSCSIController(devices object.VirtualDeviceLi
 func (d *Dispatcher) addSerialPort(conf *config.VirtualContainerHostConfigSpec, vm *vm.VirtualMachine, devices object.VirtualDeviceList) (object.VirtualDeviceList, error) {
 	defer trace.End(trace.Begin(""))
 
-	devices, err := vm.Device(d.ctx)
-	if err != nil {
-		log.Errorf("Failed to get vm devices for appliance: %s", err)
-		return nil, err
-	}
-
 	// TODO: we need to add an accessor for generating paths within the VM directory
 	vmx, err := vm.VMPathName(d.ctx)
 	if err != nil {
