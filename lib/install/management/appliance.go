@@ -654,6 +654,9 @@ func (d *Dispatcher) reconfigureApplianceSpec(vm *vm.VirtualMachine, conf *confi
 	if devices, err = d.configIso(conf, vm, settings); err != nil {
 		return nil, err
 	}
+	if devices, err = d.addSerialPort(conf, vm, devices); err != nil {
+		return nil, err
+	}
 
 	newDevices, err := devices.ConfigSpec(types.VirtualDeviceConfigSpecOperationAdd)
 	if err != nil {
@@ -662,10 +665,6 @@ func (d *Dispatcher) reconfigureApplianceSpec(vm *vm.VirtualMachine, conf *confi
 	}
 
 	spec.DeviceChange = newDevices
-
-	if devices, err = d.addSerialPort(conf, vm, devices); err != nil {
-		return nil, err
-	}
 
 	//	// update existing devices
 	//	if devices, err = d.configLogging(conf, vm, settings); err != nil {
