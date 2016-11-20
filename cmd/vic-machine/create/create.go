@@ -1146,45 +1146,45 @@ func logArguments(cliContext *cli.Context) {
 
 			i := cliContext.Int(f)
 			if i != 0 {
-				log.Debugf("flag %s:%d", f, i)
+				log.Debugf("--%s=%d", f, i)
 				continue
 			}
 			d := cliContext.Duration(f)
 			if d != 0 {
-				log.Debugf("flag %s:%s", f, d.String())
+				log.Debugf("--%s=%s", f, d.String())
 				continue
 			}
 			x := cliContext.Float64(f)
 			if x != 0 {
-				log.Debugf("flag %s:%f", f, x)
+				log.Debugf("--%s=%f", f, x)
 				continue
 			}
 			s := cliContext.String(f)
 			if s != "" {
-				log.Debugf("flag %s:%s", f, s)
+				log.Debugf("--%s=%s", f, s)
 				continue
 			}
 			ss := cliContext.StringSlice(f)
 			if ss != nil {
-				log.Debugf("flag %s:%#v", f, ss)
+				log.Debugf("--%s=%#v", f, ss)
 				continue
 			}
 			is := cliContext.IntSlice(f)
 			if is != nil {
-				log.Debugf("flag %s:%#v", f, is)
+				log.Debugf("--%s=%#v", f, is)
 				continue
 			}
 
 			b := cliContext.Bool(f)
 			bT := cliContext.BoolT(f)
-			log.Debugf("assume bool flag %s:%t %t", f, b, bT)
+			log.Debugf("assume bool --%s=%t %t", f, b, bT)
 			if b || bT {
 				continue
 			}
 
 			g := cliContext.Generic(f)
 			if g != nil {
-				log.Debugf("flag %s:%#v", f, g)
+				log.Debugf("--%s=%#v", f, g)
 				continue
 			}
 

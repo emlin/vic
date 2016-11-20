@@ -286,15 +286,28 @@ func (d *Dispatcher) addParaVirtualSCSIController(devices object.VirtualDeviceLi
 
 // addSerialPort is separate from the configLogging because I could not successfully add a serial port after initial VM creation
 // The controller slot kept colliding with the Keyboard no matter whether it was explicitly specified or left as -1 for vSphere to determine
-func (d *Dispatcher) addSerialPort(conf *config.VirtualContainerHostConfigSpec, cspec *spec.VirtualMachineConfigSpec, devices object.VirtualDeviceList) (object.VirtualDeviceList, error) {
+func (d *Dispatcher) addSerialPort(conf *config.VirtualContainerHostConfigSpec, vm *vm.VirtualMachine, devices object.VirtualDeviceList) (object.VirtualDeviceList, error) {
 	defer trace.End(trace.Begin(""))
+
+	devices, err := vm.Device(d.ctx)
+	if err != nil {
+		log.Errorf("Failed to get vm devices for appliance: %s", err)
+		return nil, err
+	}
+
+	// TODO: we need to add an accessor for generating paths within the VM directory
+	vmx, err := vm.VMPathName(d.ctx)
+	if err != nil {
+		log.Errorf("Unable to determine path of appliance VM: %s", err)
+		return nil, err
+	}
 
 	// TODO: move this construction into the spec package and update portlayer/logging to use it as well
 	serial := &types.VirtualSerialPort{
 		VirtualDevice: types.VirtualDevice{
 			Backing: &types.VirtualSerialPortFileBackingInfo{
 				VirtualDeviceFileBackingInfo: types.VirtualDeviceFileBackingInfo{
-					FileName: "[]",
+					FileName: fmt.Sprintf("%s/tether.debug", path.Dir(vmx)),
 				},
 			},
 			Connectable: &types.VirtualDeviceConnectInfo{
@@ -346,9 +359,9 @@ func (d *Dispatcher) createApplianceSpec(conf *config.VirtualContainerHostConfig
 		return nil, err
 	}
 
-	if devices, err = d.addSerialPort(conf, spec, devices); err != nil {
-		return nil, err
-	}
+	//	if devices, err = d.addSerialPort(conf, spec, devices); err != nil {
+	//		return nil, err
+	//	}
 
 	deviceChange, err := devices.ConfigSpec(types.VirtualDeviceConfigSpecOperationAdd)
 	if err != nil {
@@ -650,10 +663,14 @@ func (d *Dispatcher) reconfigureApplianceSpec(vm *vm.VirtualMachine, conf *confi
 
 	spec.DeviceChange = newDevices
 
-	// update existing devices
-	if devices, err = d.configLogging(conf, vm, settings); err != nil {
+	if devices, err = d.addSerialPort(conf, vm, devices); err != nil {
 		return nil, err
 	}
+
+	//	// update existing devices
+	//	if devices, err = d.configLogging(conf, vm, settings); err != nil {
+	//		return nil, err
+	//	}
 
 	updateDevices, err := devices.ConfigSpec(types.VirtualDeviceConfigSpecOperationEdit)
 	if err != nil {
