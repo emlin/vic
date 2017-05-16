@@ -1854,8 +1854,17 @@ func copyStdOut(ctx context.Context, pl *client.PortLayer, ac *AttachConfig, std
 func copyStdErr(ctx context.Context, pl *client.PortLayer, ac *AttachConfig, stderr io.Writer) error {
 	id := ac.ID
 
-	getStderrParams := interaction.NewContainerGetStderrParamsWithContext(ctx).WithID(id)
+	//Calculate how much time to let portlayer attempt
+	plAttemptTimeout := attachAttemptTimeout - attachPLAttemptDiff //assumes personality deadline longer than portlayer's deadline
+	plAttemptDeadline := time.Now().Add(plAttemptTimeout)
+	swaggerDeadline := strfmt.DateTime(plAttemptDeadline)
+	log.Debugf("* stderr portlayer deadline: %s", plAttemptDeadline.Format(time.UnixDate))
+	log.Debugf("* stderr personality deadline: %s", time.Now().Add(attachAttemptTimeout).Format(time.UnixDate))
+
+	log.Debugf("* stderr attach start %s", time.Now().Format(time.UnixDate))
+	getStderrParams := interaction.NewContainerGetStderrParamsWithContext(ctx).WithID(id).WithDeadline(&swaggerDeadline)
 	_, err := pl.Interaction.ContainerGetStderr(getStderrParams, stderr)
+	log.Debugf("* stderr attach end %s", time.Now().Format(time.UnixDate))
 	if err != nil {
 		if _, ok := err.(*interaction.ContainerGetStderrNotFound); ok {
 			ResourceNotFoundError(id, "interaction connection")
