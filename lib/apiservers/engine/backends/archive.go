@@ -40,6 +40,7 @@ import (
 const (
 	containerStoreName = "container"
 	volumeStoreName    = "volume"
+	imageStoreName     = "image"
 )
 
 // ContainerArchivePath creates an archive of the filesystem resource at the
