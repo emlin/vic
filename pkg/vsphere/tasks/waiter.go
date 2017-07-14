@@ -110,6 +110,9 @@ func isRetryError(err error) bool {
 		case *types.InvalidArgument:
 			logExpectedFault(soapFault, f)
 			return true
+		case *types.InvalidDeviceSpec:
+			logExpectedFault(soapFault, f)
+			return true
 		default:
 			logSoapFault(f)
 		}
@@ -123,6 +126,9 @@ func isRetryError(err error) bool {
 			logExpectedFault(vimFault, f)
 			return true
 		case *types.InvalidArgument:
+			logExpectedFault(vimFault, f)
+			return true
+		case *types.InvalidDeviceSpec:
 			logExpectedFault(vimFault, f)
 			return true
 		default:
@@ -139,6 +145,9 @@ func isRetryError(err error) bool {
 			logExpectedFault(taskFault, f)
 			return true
 		case *types.InvalidArgument:
+			logExpectedFault(taskFault, f)
+			return true
+		case *types.InvalidDeviceSpec:
 			logExpectedFault(taskFault, f)
 			return true
 		default:

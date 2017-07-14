@@ -105,7 +105,7 @@ type VicContainerProxy interface {
 	Signal(vc *viccontainer.VicContainer, sig uint64) error
 	Resize(id string, height, width int32) error
 	Rename(vc *viccontainer.VicContainer, newName string) error
-
+	GetContainerChanges(vc *viccontainer.VicContainer, withData bool) (io.ReadCloser, error)
 	Handle(id, name string) (string, error)
 	Client() *client.PortLayer
 	exitCode(vc *viccontainer.VicContainer) (string, error)
@@ -670,6 +670,26 @@ func (c *ContainerProxy) StreamContainerStats(ctx context.Context, config *conve
 		}
 	}
 	return nil
+}
+
+func (c *ContainerProxy) GetContainerChanges(vc *viccontainer.VicContainer, withData bool) (io.ReadCloser, error) {
+	host, err := sys.UUID()
+	if err != nil {
+		return nil, InternalServerError("Failed to determine host UUID")
+	}
+
+	parent := vc.LayerID
+	spec := archive.FilterSpec{
+		Inclusions: map[string]struct{}{},
+		Exclusions: map[string]struct{}{},
+	}
+
+	r, err := c.ArchiveExportReader(context.Background(), "container", host, vc.ContainerID, parent, withData, spec)
+	if err != nil {
+		return nil, InternalServerError(err.Error())
+	}
+
+	return r, nil
 }
 
 // ArchiveExportReader streams a tar archive from the portlayer.  Once the stream is complete,
@@ -1886,7 +1906,10 @@ func ContainerInfoToVicContainer(info models.ContainerInfo) *viccontainer.VicCon
 	log.Debugf("Container %q", name)
 
 	if info.ContainerConfig.LayerID != "" {
-		vc.ImageID = info.ContainerConfig.LayerID
+		vc.LayerID = info.ContainerConfig.LayerID
+	}
+	if info.ContainerConfig.ImageID != "" {
+		vc.ImageID = info.ContainerConfig.ImageID
 	}
 
 	if info.ContainerConfig.ContainerID != "" {
