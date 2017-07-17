@@ -38,7 +38,7 @@ import (
 	"github.com/docker/docker/api/types/filters"
 	dnetwork "github.com/docker/docker/api/types/network"
 	timetypes "github.com/docker/docker/api/types/time"
-	"github.com/docker/docker/pkg/archive"
+	docker "github.com/docker/docker/pkg/archive"
 	"github.com/docker/docker/pkg/ioutils"
 	"github.com/docker/docker/pkg/namesgenerator"
 	"github.com/docker/docker/pkg/stdcopy"
@@ -59,6 +59,7 @@ import (
 	"github.com/vmware/vic/lib/apiservers/portlayer/client/scopes"
 	"github.com/vmware/vic/lib/apiservers/portlayer/client/tasks"
 	"github.com/vmware/vic/lib/apiservers/portlayer/models"
+	"github.com/vmware/vic/lib/archive"
 	"github.com/vmware/vic/lib/metadata"
 	"github.com/vmware/vic/lib/portlayer/constants"
 	"github.com/vmware/vic/pkg/retry"
@@ -1298,12 +1299,13 @@ func (c *Container) ContainerChanges(name string) ([]docker.Change, error) {
 	for {
 		hdr, err := tarFile.Next()
 		if err == io.EOF {
-			log.Infof("Got EOF!! BAILING")
 			break
 		}
+
 		if err != nil {
 			return []docker.Change{}, InternalServerError(err.Error())
 		}
+
 		log.Infof("Got header %s", hdr.Name)
 		change := docker.Change{
 			Path: hdr.Name,
@@ -1320,7 +1322,7 @@ func (c *Container) ContainerChanges(name string) ([]docker.Change, error) {
 		}
 		changes = append(changes, change)
 	}
-	log.Infof("\t\t\tChanges: %#v", changes)
+
 	return changes, nil
 }
 
