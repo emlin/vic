@@ -24,6 +24,7 @@ import (
 	"strings"
 
 	log "github.com/Sirupsen/logrus"
+	"github.com/davecgh/go-spew/spew"
 
 	"github.com/vmware/govmomi/object"
 	"github.com/vmware/govmomi/task"
@@ -229,7 +230,7 @@ func isSystemError(err error) bool {
 			return true
 		}
 	}
-	log.Debugf("got error: %+v", err)
+	spew.Dump(err)
 	return false
 }
 
