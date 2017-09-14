@@ -229,13 +229,13 @@ func isSystemError(err error) bool {
 			return true
 		}
 	}
-
+	log.Debugf("got error: %+v", err)
 	return false
 }
 
 func (d *Dispatcher) deleteSnapshotByRef(snapshot *types.ManagedObjectReference, snapshotName, applianceName string) error {
 	defer trace.End(trace.Begin(snapshotName))
-	log.Infof("Deleting upgrade snapshot %q", snapshotName)
+	log.Infof("Deleting snapshot %q", snapshotName)
 	// do clean up aggressively, even the previous operation failed with context deadline exceeded.
 	ctx := context.Background()
 	if _, err := d.appliance.WaitForResult(ctx, func(ctx context.Context) (tasks.Task, error) {
@@ -352,22 +352,13 @@ func (d *Dispatcher) rollback(conf *config.VirtualContainerHostConfigSpec, snaps
 func (d *Dispatcher) ensureRollbackReady(conf *config.VirtualContainerHostConfigSpec, settings *data.InstallerData) error {
 	defer trace.End(trace.Begin(conf.Name))
 
-	power, err := d.appliance.PowerState(d.ctx)
-	if err != nil {
-		log.Errorf("Failed to get vm power status %q after rollback: %s", d.appliance.Reference(), err)
-		return err
-	}
-	if power == types.VirtualMachinePowerStatePoweredOff {
-		log.Infof("Roll back finished - Appliance is kept in powered off status")
-		return nil
-	}
-	if err = d.startAppliance(conf); err != nil {
+	if err := d.startAppliance(conf); err != nil {
 		return err
 	}
 
 	ctx, cancel := context.WithTimeout(d.ctx, settings.Timeout)
 	defer cancel()
-	if err = d.CheckServiceReady(ctx, conf, nil); err != nil {
+	if err := d.CheckServiceReady(ctx, conf, nil); err != nil {
 		// do not return error in this case, to make sure clean up continues
 		log.Info("\tAPI may be slow to start - try to connect to API after a few minutes")
 	}
