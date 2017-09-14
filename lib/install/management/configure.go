@@ -256,7 +256,7 @@ func (d *Dispatcher) tryCreateSnapshot(name, desc string) (*types.ManagedObjectR
 	// Use solution from https://github.com/vmware/vic/issues/4069 to do this either as part of 4069 or once it's closed
 
 	info, err := d.appliance.WaitForResult(d.ctx, func(ctx context.Context) (tasks.Task, error) {
-		return d.appliance.CreateSnapshot(d.ctx, name, desc, true, false)
+		return d.appliance.CreateSnapshot(d.ctx, name, desc, false, false)
 	})
 	if err != nil {
 		return nil, errors.Errorf("Failed to create upgrade snapshot %q: %s.", name, err)
